@@ -1,0 +1,141 @@
+setWebViewClient(new WebViewClient());
+
+        webView.loadUrl("file:///android_asset/index.html");
+
+    }
+
+    private void hideSystemUI() {
+
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+
+            WindowInsetsController c = getWindow().getInsetsController();
+
+            if (c != null) {
+
+                c.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+
+                c.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
+            }
+
+        } else {
+
+            getWindow().getDecorView().setSystemUiVisibility(
+
+                View.SYSTEM_UI_FLAG_FULLSCREEN |
+
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+
+            );
+
+        }
+
+    }
+
+    @Override
+
+    public void onWindowFocusChanged(boolean hasFocus) {
+
+        super.onWindowFocusChanged(hasFocus);
+
+        if (hasFocus) hideSystemUI();
+
+    }
+
+    @Override
+
+    public void onBackPressed() {
+
+        if (webView != null && webView.canGoBack()) webView.goBack();
+
+        else super.onBackPressed();
+
+    }
+
+}
+
+EOF
+
+cat > "$WORK/.github/workflows/build-apk.yml" <<'EOF'
+
+name: Build APK
+
+on:
+
+  workflow_dispatch:
+
+  push:
+
+    branches: [ main, master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+
+        with:
+
+          distribution: temurin
+
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+        with:
+
+          gradle-version: '8.7'
+
+      - run: gradle assembleDebug
+
+      - uses: actions/upload-artifact@v4
+
+        with:
+
+          name: STREET_EMPIRE-debug-apk
+
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+EOF
+
+cat > "$WORK/README_BUILD.txt" <<'EOF'
+
+STREET EMPIRE Android wrapper
+
+Сам файл игры index.html скопирован без изменений.
+
+Проект загружает его локально в Android WebView.
+
+Сборка APK:
+
+  gradle assembleDebug
+
+Результат:
+
+  app/build/outputs/apk/debug/app-debug.apk
+
+Также добавлен GitHub Actions workflow для автоматической сборки APK.
+
+EOF
+
+cd /mnt/data
+
+zip -qr STREET_EMPIRE_ANDROID_PROJECT.zip STREET_EMPIRE_ANDROID_PROJECT
+
+sha256sum /mnt/data/STREET_EMPIRE_ANDROID_PROJECT/app/src/main/assets/index.html /mnt/data/se_unzip/STREET_EMPIRE_100/index.html
+
+ls -lh /mnt/data/STREET_EMPIRE_ANDROID_PROJECT.zip
