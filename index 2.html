@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#090b0f">
+<title>STREET EMPIRE</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#090b0f;color:white;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;touch-action:none}
+canvas{width:100vw;height:100vh;display:block}
+#rotate{display:none;position:fixed;inset:0;z-index:100;background:#090b0f;align-items:center;justify-content:center;text-align:center;padding:32px;font-weight:900;font-size:22px}@media(orientation:portrait){#rotate{display:flex}}
+#hud{position:fixed;inset:0;pointer-events:none}
+#tl{position:absolute;left:max(12px,env(safe-area-inset-left));top:max(10px,env(safe-area-inset-top));display:flex;gap:11px;align-items:flex-start}
+#mapWrap{width:120px;height:120px;border-radius:60px;overflow:hidden;border:3px solid #fff;box-shadow:0 7px 22px #000a;background:#1d2521}#mini{width:120px;height:120px}
+#info{text-shadow:0 2px 5px #000}.logo{font-size:18px;font-weight:1000;letter-spacing:1.1px}.money{color:#84ff8a;font-size:19px;font-weight:900}.meta{font-size:11px;margin-top:3px}.dev{background:#287cff;border-radius:6px;padding:2px 5px;font-size:9px}
+#tr{position:absolute;right:max(12px,env(safe-area-inset-right));top:max(10px,env(safe-area-inset-top));display:flex;gap:7px;pointer-events:auto}.tb{width:44px;height:44px;border-radius:13px;border:1px solid #ffffff35;background:#111b;color:#fff;font-size:20px}
+#stick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(18px,env(safe-area-inset-bottom));width:120px;height:120px;border-radius:60px;background:#ffffff17;border:2px solid #ffffff45;pointer-events:auto}#knob{position:absolute;left:36px;top:36px;width:46px;height:46px;border-radius:23px;background:#ffffffe3;box-shadow:0 5px 18px #0008}
+#ctrl{position:absolute;right:max(18px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));width:205px;height:165px;pointer-events:auto}.ab{position:absolute;border-radius:50%;border:1px solid #ffffff50;background:#0f1117de;color:#fff;font-weight:1000;box-shadow:0 7px 18px #0009}#act{right:0;bottom:0;width:76px;height:76px}#run{right:88px;bottom:62px;width:64px;height:64px;font-size:11px}#horn{right:10px;bottom:93px;width:52px;height:52px;font-size:18px}#lights{right:140px;bottom:5px;width:50px;height:50px;font-size:17px}
+#prompt{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);background:#000b;border:1px solid #ffffff2a;border-radius:10px;padding:7px 11px;font-size:11px}
+#toast{position:absolute;left:50%;top:15%;transform:translateX(-50%);background:#000d;border:1px solid #ffffff25;border-radius:10px;padding:8px 12px;font-size:12px;opacity:0;transition:.18s}
+.panel{display:none;position:fixed;inset:0;z-index:30;background:#05070ade;align-items:center;justify-content:center;padding:18px}.card{width:min(620px,94vw);max-height:86vh;overflow:auto;background:#171b22;border:1px solid #ffffff20;border-radius:22px;padding:18px;box-shadow:0 28px 70px #000e}.card h2{margin:0 0 12px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff12}.row:last-child{border-bottom:0}select,.btn{background:#282e38;color:#fff;border:1px solid #ffffff22;border-radius:10px;padding:9px 10px;font-weight:700}.close{width:100%;margin-top:14px;padding:12px;border:0;border-radius:12px;font-weight:900}
+.phone{width:min(360px,88vw);height:min(610px,84vh);background:#0c1016;border:8px solid #272d36;border-radius:38px;padding:26px 15px 15px;position:relative}.notch{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:110px;height:22px;border-radius:12px;background:#000}.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:15px}.app{height:72px;border-radius:18px;background:#202733;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:27px}.app span{font-size:10px;margin-top:4px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#252b34;border:1px solid #ffffff22;border-radius:999px;padding:8px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="rotate">Поверни iPhone горизонтально 📱↻<br><span style="font-size:12px;opacity:.7">STREET EMPIRE</span></div>
+<canvas id="game"></canvas>
+<div id="hud">
+  <div id="tl">
+    <div id="mapWrap"><canvas id="mini"></canvas></div>
+    <div id="info">
+      <div class="logo">STREET EMPIRE</div>
+      <div class="money">₼700,000,000,000</div>
+      <div class="meta" id="hero">Джейк Картер <span class="dev">DEV ✓</span></div>
+      <div class="meta" id="clock">Баку • 07:00 • Осень</div>
+      <div class="meta" id="needs">🍔 100%　💧 100%　🏠 96%　🚗 72%</div>
+    </div>
+  </div>
+  <div id="tr">
+    <button class="tb" id="heroBtn">👤</button>
+    <button class="tb" id="phoneBtn">📱</button>
+    <button class="tb" id="menuBtn">☰</button>
+    <button class="tb" id="setBtn">⚙️</button>
+  </div>
+  <div id="stick"><div id="knob"></div></div>
+  <div id="ctrl">
+    <button class="ab" id="run">SPRINT</button>
+    <button class="ab" id="horn">📣</button>
+    <button class="ab" id="lights">💡</button>
+    <button class="ab" id="act">ACT</button>
+  </div>
+  <div id="prompt">Свободная жизнь • обязательных миссий нет</div>
+  <div id="toast"></div>
+</div>
+
+<div class="panel" id="settings"><div class="card"><h2>Настройки</h2>
+<div class="row"><span>Режим мира</span><select id="worldMode"><option value="full">Полный мир</option><option value="balanced">Сбалансированный</option></select></div>
+<div class="row"><span>Графика</span><select id="graphics"><option>Низкая</option><option selected>Средняя</option><option>Высокая</option><option>Ультра</option><option>Авто</option></select></div>
+<div class="row"><span>FPS</span><select><option>30</option><option selected>60</option><option>120</option><option>Авто</option></select></div>
+<div class="row"><span>Погода</span><select id="weather"><option>Авто</option><option>Ясно</option><option>Облачно</option><option>Дождь</option></select></div>
+<div class="row"><span>Управление</span><select><option selected>Сенсорное</option><option>PS4 / Bluetooth</option></select></div>
+<div class="row"><span>Автосохранение</span><button class="btn" id="saveBtn">Сохранить сейчас</button></div>
+<button class="close" onclick="hide('settings')">Готово</button></div></div>
+
+<div class="panel" id="menu"><div class="card"><h2>STREET EMPIRE</h2>
+<div class="tabs">
+<div class="pill">🏠 Дома</div><div class="pill">🚘 Гараж</div><div class="pill">👕 Одежда</div><div class="pill">🕶 Аксессуары</div><div class="pill">🍔 Еда</div><div class="pill">🐕 Питомцы</div><div class="pill">🚕 Такси</div><div class="pill">🚌 Работа</div><div class="pill">📸 Фото</div><div class="pill">🎮 Мини-игры</div><div class="pill">🔧 Тюнинг</div><div class="pill">🧼 Мойка</div><div class="pill">🚓 Полиция</div><div class="pill">🚑 Скорая</div><div class="pill">🚒 Пожарные</div>
+</div>
+<div class="row"><span>Профиль</span><span>Developer ✓</span></div>
+<div class="row"><span>Баланс</span><span>₼700 млрд</span></div>
+<div class="row"><span>Режим</span><span id="modeLabel">Полный мир</span></div>
+<button class="close" onclick="hide('menu')">Закрыть</button></div></div>
+
+<div class="panel" id="phonePanel"><div class="phone"><div class="notch"></div><div id="phoneOwner">Samsung • Джейк</div>
+<div class="apps">
+<div class="app">🗺️<span>Карта</span></div><div class="app">☎️<span>Звонки</span></div><div class="app">💬<span>Сообщения</span></div>
+<div class="app">📷<span>Камера</span></div><div class="app">🚕<span>Такси</span></div><div class="app">🛒<span>Магазины</span></div>
+<div class="app">🏠<span>Дом</span></div><div class="app">📸<span>Social</span></div><div class="app">🤖<span>ChatGPT</span></div>
+</div><button class="close" onclick="hide('phonePanel')">Закрыть телефон</button></div></div>
+
+<script>
+const C=document.getElementById('game'),X=C.getContext('2d'),M=document.getElementById('mini'),MX=M.getContext('2d');
+let W,H,D=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;C.width=W*D;C.height=H*D;X.setTransform(D,0,0,D,0,0);M.width=120*D;M.height=120*D;MX.setTransform(D,0,0,D,0,0)}resize();addEventListener('resize',resize);
+
+const world={w:4200,h:3400};
+const heroes=[
+{n:'Джейк Картер',phone:'Samsung',x:520,y:520,c:'#151515'},
+{n:'Маркус Рид',phone:'iPhone 16',x:1680,y:960,c:'#17334f'},
+{n:'Виктор Кейн',phone:'Redmi',x:2760,y:1520,c:'#3d2a20'}
+];
+let hi=0,p={x:520,y:520,a:0,car:-1},mins=420,weather='Авто',mode='full',hunger=100,thirst=100,homeClean=96,carClean=72,headlights=false,hazard=false;
+const roads=[];for(let x=300;x<world.w;x+=460)roads.push({x:x-82,y:0,w:164,h:world.h});for(let y=300;y<world.h;y+=460)roads.push({x:0,y:y-82,w:world.w,h:164});
+const buildings=[];for(let gx=0;gx<9;gx++)for(let gy=0;gy<7;gy++){let x=gx*460,y=gy*460;buildings.push({x:x+35,y:y+30,w:170,h:150,t:(gx+gy)%5});buildings.push({x:x+250,y:y+45,w:150,h:130,t:(gx*2+gy)%5});buildings.push({x:x+50,y:y+250,w:190,h:130,t:(gx+gy*2)%5})}
+const zones={
+home:{x:430,y:410,w:260,h:200,label:'ДОМ ДЖЕЙКА',c:'#e8d276'},
+shop:{x:990,y:470,w:170,h:120,label:'ОДЕЖДА',c:'#b889c7'},
+cafe:{x:1450,y:470,w:170,h:120,label:'КАФЕ',c:'#d59a63'},
+wash:{x:1910,y:470,w:170,h:120,label:'АВТОМОЙКА',c:'#72b8d5'},
+garage:{x:2370,y:470,w:170,h:120,label:'ТЮНИНГ',c:'#939aa4'},
+hospital:{x:2830,y:470,w:190,h:130,label:'БОЛЬНИЦА',c:'#efefef'},
+police:{x:3290,y:470,w:190,h:130,label:'ПОЛИЦИЯ',c:'#84a7df'}
+};
+const cars=[
+{x:740,y:300,a:0,c:'#b71c1c',s:0,n:false,dirty:.3,type:'sport'},
+{x:1220,y:760,a:Math.PI/2,c:'#f2f2f2',s:48,n:true,dirty:.15,type:'taxi'},
+{x:1680,y:1220,a:0,c:'#23272d',s:45,n:true,dirty:.28,type:'sedan'},
+{x:2140,y:1680,a:Math.PI/2,c:'#f2a000',s:50,n:true,dirty:.1,type:'taxi'},
+{x:2600,y:2140,a:0,c:'#1b5e20',s:46,n:true,dirty:.2,type:'bus'},
+{x:3060,y:2600,a:Math.PI/2,c:'#1565c0',s:43,n:true,dirty:.1,type:'sedan'},
+{x:3520,y:3000,a:0,c:'#ffffff',s:47,n:true,dirty:.1,type:'police'}
+];
+const npcs=[];for(let i=0;i<70;i++)npcs.push({x:120+Math.random()*3960,y:120+Math.random()*3100,a:Math.random()*6.28,s:18+Math.random()*22,t:Math.random()*5,c:`hsl(${Math.random()*360} 38% 58%)`,role:i%17===0?'police':i%13===0?'medic':i%19===0?'fire':'civil'});
+function toast(s){let e=document.getElementById('toast');e.textContent=s;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1400)}
+function show(id){document.getElementById(id).style.display='flex'}function hide(id){document.getElementById(id).style.display='none'}
+setBtn.onclick=()=>show('settings');menuBtn.onclick=()=>show('menu');phoneBtn.onclick=()=>{document.getElementById('phoneOwner').textContent=heroes[hi].phone+' • '+heroes[hi].n.split(' ')[0];show('phonePanel')};
+heroBtn.onclick=()=>{if(p.car>=0)return;heroes[hi].x=p.x;heroes[hi].y=p.y;hi=(hi+1)%3;p.x=heroes[hi].x;p.y=heroes[hi].y;hud();toast('Персонаж: '+heroes[hi].n)};
+worldMode.onchange=e=>{mode=e.target.value;document.getElementById('modeLabel').textContent=mode==='full'?'Полный мир':'Сбалансированный'};
+document.getElementById('weather').onchange=e=>weather=e.target.value;
+function saveGame(){localStorage.setItem('SE100',JSON.stringify({hi,p,heroes,mins,weather,mode,hunger,thirst,homeClean,carClean,headlights,hazard}));toast('Сохранено ✓')}
+saveBtn.onclick=saveGame;
+try{let q=JSON.parse(localStorage.getItem('SE100'));if(q){hi=q.hi||0;Object.assign(p,q.p||{});mins=q.mins||420;weather=q.weather||'Авто';mode=q.mode||'full';hunger=q.hunger??100;thirst=q.thirst??100;homeClean=q.homeClean??96;carClean=q.carClean??72;headlights=!!q.headlights;hazard=!!q.hazard}}catch(e){}
+
+let st={id:null,x:0,y:0},stickEl=document.getElementById('stick'),knob=document.getElementById('knob');
+function setStick(t){let r=stickEl.getBoundingClientRect(),dx=t.clientX-r.left-r.width/2,dy=t.clientY-r.top-r.height/2,m=Math.hypot(dx,dy),l=42;if(m>l){dx*=l/m;dy*=l/m}st.x=dx/l;st.y=dy/l;knob.style.transform=`translate(${dx}px,${dy}px)`}
+stickEl.addEventListener('touchstart',e=>{e.preventDefault();let t=e.changedTouches[0];st.id=t.identifier;setStick(t)},{passive:false});
+addEventListener('touchmove',e=>{for(let t of e.changedTouches)if(t.identifier===st.id)setStick(t)},{passive:false});
+addEventListener('touchend',e=>{for(let t of e.changedTouches)if(t.identifier===st.id){st.id=null;st.x=st.y=0;knob.style.transform='translate(0,0)'}},{passive:false});
+run.addEventListener('touchstart',e=>{e.preventDefault();window.fast=true},{passive:false});run.addEventListener('touchend',e=>{e.preventDefault();window.fast=false},{passive:false});
+horn.addEventListener('touchstart',e=>{e.preventDefault();toast(p.car>=0?'БИИП! 📣':'Сначала сядь в машину')},{passive:false});
+lights.addEventListener('touchstart',e=>{e.preventDefault();if(p.car<0){toast('Сначала сядь в машину');return}headlights=!headlights;toast(headlights?'Фары включены':'Фары выключены')},{passive:false});
+
+function nearCar(){let b=-1,d=90;cars.forEach((c,i)=>{let x=Math.hypot(p.x-c.x,p.y-c.y);if(x<d){d=x;b=i}});return b}
+function zoneNear(z){return Math.hypot(p.x-(z.x+z.w/2),p.y-(z.y+z.h/2))<130}
+act.addEventListener('touchstart',e=>{
+ e.preventDefault();
+ if(p.car>=0){let c=cars[p.car];p.x=c.x+48;p.y=c.y+48;p.car=-1;toast('Вышел из машины');return}
+ let i=nearCar();if(i>=0){p.car=i;cars[i].n=false;toast('Ты за рулём');return}
+ if(zoneNear(zones.cafe)){hunger=Math.min(100,hunger+40);thirst=Math.min(100,thirst+45);toast('Поел и выпил 🥤');return}
+ if(zoneNear(zones.home)){homeClean=Math.min(100,homeClean+15);toast('Уборка дома +15%');return}
+ if(zoneNear(zones.wash)){carClean=100;toast('Машина вымыта ✨');return}
+ if(zoneNear(zones.shop)){toast('Куплены очки и часы 🕶⌚');return}
+ if(zoneNear(zones.garage)){toast('Тюнинг: диски • подвеска • неон • номера');return}
+ if(zoneNear(zones.hospital)){toast('Больница открыта 24/7');return}
+ if(zoneNear(zones.police)){toast('Работа полицейским доступна');return}
+ toast('Рядом нет действия')
+},{passive:false});
+
+function hud(){hero.innerHTML=heroes[hi].n+' <span class="dev">DEV ✓</span>';let h=String(Math.floor(mins/60)%24).padStart(2,'0'),m=String(Math.floor(mins%60)).padStart(2,'0');clock.textContent=`Баку • ${h}:${m} • Осень`;needs.textContent=`🍔 ${Math.round(hunger)}%　💧 ${Math.round(thirst)}%　🏠 ${Math.round(homeClean)}%　🚗 ${Math.round(carClean)}%`}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}function lerp(a,b,t){return a+(b-a)*t}
+let auto=0;
+function update(dt){
+ mins=(mins+dt*60)%1440;hunger=Math.max(0,hunger-dt*.025);thirst=Math.max(0,thirst-dt*.04);homeClean=Math.max(0,homeClean-dt*.004);if(p.car>=0)carClean=Math.max(0,carClean-dt*.009);
+ auto+=dt;if(auto>20){auto=0;saveGame()}
+ if(p.car>=0){let c=cars[p.car],thr=-st.y;c.s=lerp(c.s,thr*(window.fast?345:225),Math.min(1,dt*3));c.a+=st.x*dt*2.1*(c.s>=0?1:-1);c.x+=Math.cos(c.a)*c.s*dt;c.y+=Math.sin(c.a)*c.s*dt;c.x=clamp(c.x,20,world.w-20);c.y=clamp(c.y,20,world.h-20);p.x=c.x;p.y=c.y;p.a=c.a}else{let sp=window.fast?225:145;if(Math.hypot(st.x,st.y)>.04){p.a=Math.atan2(st.y,st.x);p.x+=st.x*sp*dt;p.y+=st.y*sp*dt}p.x=clamp(p.x,12,world.w-12);p.y=clamp(p.y,12,world.h-12)}
+ cars.forEach((c,i)=>{if(!c.n||i===p.car)return;c.x+=Math.cos(c.a)*c.s*dt;c.y+=Math.sin(c.a)*c.s*dt;if(c.x<50||c.x>world.w-50||c.y<50||c.y>world.h-50)c.a+=Math.PI});
+ let n=mode==='balanced'?24:npcs.length;for(let i=0;i<n;i++){let q=npcs[i];q.t-=dt;if(q.t<0){q.t=2+Math.random()*5;q.a+=Math.random()*1.5-.75}q.x+=Math.cos(q.a)*q.s*dt;q.y+=Math.sin(q.a)*q.s*dt;if(q.x<30||q.x>world.w-30||q.y<30||q.y>world.h-30)q.a+=Math.PI}
+ hud()
+}
+function building(b,cx,cy){let x=b.x-cx,y=b.y-cy;if(x>W||y>H||x+b.w<0||y+b.h<0)return;let cs=['#68727d','#84776b','#606a73','#75675f','#59646e'];X.fillStyle='#5d7156';X.fillRect(x-9,y-9,b.w+18,b.h+18);X.shadowColor='#0007';X.shadowBlur=13;X.shadowOffsetY=9;X.fillStyle=cs[b.t];X.fillRect(x,y,b.w,b.h);X.shadowColor='transparent';X.fillStyle='#9fd5ff88';for(let a=13;a<b.w-10;a+=29)for(let d=13;d<b.h-10;d+=27)X.fillRect(x+a,y+d,11,8)}
+function label(o,cx,cy){X.fillStyle=o.c;X.fillRect(o.x-cx,o.y-cy,o.w,o.h);X.fillStyle='#111';X.font='bold 13px sans-serif';X.fillText(o.label,o.x+10-cx,o.y+o.h/2-cy)}
+function drawCar(c,cx,cy){X.save();X.translate(c.x-cx,c.y-cy);X.rotate(c.a);X.shadowColor='#0008';X.shadowBlur=8;X.shadowOffsetY=5;X.fillStyle=c.c;X.fillRect(-31,-16,62,32);X.shadowColor='transparent';X.fillStyle='#0c151b';X.fillRect(-12,-13,26,26);X.fillStyle='#a3d7f4';X.fillRect(-8,-10,16,7);X.fillRect(-8,3,16,7);X.fillStyle='#050505';X.fillRect(-25,-20,13,5);X.fillRect(12,-20,13,5);X.fillRect(-25,15,13,5);X.fillRect(12,15,13,5);if(carClean<50&&c===cars[p.car]){X.fillStyle='#765d3c77';for(let i=0;i<8;i++)X.fillRect(-26+i*7,-10+(i%3)*8,6,5)}if(headlights&&c===cars[p.car]){X.fillStyle='#fff5ad';X.fillRect(28,-11,7,7);X.fillRect(28,4,7,7)}X.restore()}
+function draw(){
+ let cx=clamp(p.x-W/2,0,world.w-W),cy=clamp(p.y-H/2,0,world.h-H);
+ X.fillStyle='#70945f';X.fillRect(0,0,W,H);
+ X.fillStyle='#d2c497';X.fillRect(-cx,2860-cy,world.w,95);X.fillStyle='#398fb5';X.fillRect(-cx,2955-cy,world.w,445);
+ for(let b of buildings)building(b,cx,cy);
+ for(let r of roads){X.fillStyle='#30343a';X.fillRect(r.x-cx,r.y-cy,r.w,r.h);X.strokeStyle='#dac965';X.lineWidth=3;X.setLineDash([23,19]);X.beginPath();if(r.w>r.h){X.moveTo(r.x-cx,r.y+r.h/2-cy);X.lineTo(r.x+r.w-cx,r.y+r.h/2-cy)}else{X.moveTo(r.x+r.w/2-cx,r.y-cy);X.lineTo(r.x+r.w/2-cx,r.y+r.h-cy)}X.stroke();X.setLineDash([])}
+ Object.values(zones).forEach(z=>label(z,cx,cy));
+ for(let i=0;i<100;i++){let x=(i*223)%world.w,y=(i*317)%2800;if(x>cx-20&&x<cx+W+20&&y>cy-20&&y<cy+H+20){X.fillStyle='#27522e';X.beginPath();X.arc(x-cx,y-cy,7+i%5,0,6.28);X.fill()}}
+ let n=mode==='balanced'?24:npcs.length;for(let i=0;i<n;i++){let q=npcs[i];X.fillStyle=q.role==='police'?'#315b8d':q.role==='medic'?'#f0f0f0':q.role==='fire'?'#b42b24':q.c;X.beginPath();X.arc(q.x-cx,q.y-cy,7,0,6.28);X.fill()}
+ cars.forEach(q=>drawCar(q,cx,cy));
+ if(p.car<0){X.save();X.translate(p.x-cx,p.y-cy);X.rotate(p.a);X.fillStyle=heroes[hi].c;X.beginPath();X.arc(0,0,14,0,6.28);X.fill();X.fillStyle='#e2ad86';X.beginPath();X.arc(9,0,6,0,6.28);X.fill();X.restore()}
+ let hr=mins/60,a=(hr<6||hr>19)?.43:(hr<8||hr>17)?.18:0;if(a){X.fillStyle=`rgba(8,17,38,${a})`;X.fillRect(0,0,W,H)}
+ if(weather==='Дождь'){X.strokeStyle='#cbe8ff88';for(let i=0;i<110;i++){let x=(i*79+performance.now()/8)%W,y=(i*53+performance.now()/4)%H;X.beginPath();X.moveTo(x,y);X.lineTo(x-6,y+14);X.stroke()}}
+ drawMini()
+}
+function drawMini(){MX.fillStyle='#1d2921';MX.fillRect(0,0,120,120);let sx=120/world.w,sy=120/world.h;MX.fillStyle='#343a40';for(let r of roads)MX.fillRect(r.x*sx,r.y*sy,r.w*sx,r.h*sy);MX.fillStyle='#3b91b7';MX.fillRect(0,2955*sy,120,445*sy);MX.fillStyle='#ffe36e';MX.fillRect(zones.home.x*sx,zones.home.y*sy,zones.home.w*sx,zones.home.h*sy);MX.fillStyle='#ff4141';MX.beginPath();MX.arc(p.x*sx,p.y*sy,4,0,6.28);MX.fill()}
+let last=performance.now();function loop(t){let dt=Math.min(.033,(t-last)/1000);last=t;update(dt);draw();requestAnimationFrame(loop)}hud();requestAnimationFrame(loop);
+</script>
+</body>
+</html>

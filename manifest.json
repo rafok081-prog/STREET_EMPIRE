@@ -1,0 +1,9 @@
+{
+  "name": "STREET EMPIRE",
+  "short_name": "STREET EMPIRE",
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#090c11",
+  "theme_color": "#090c11"
+}
